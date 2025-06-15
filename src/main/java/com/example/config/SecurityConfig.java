@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity
@@ -19,22 +20,20 @@ public class SecurityConfig {
     http
             .csrf(csrf -> csrf.disable())
             .headers(headers -> headers
-                    // H2 konsolu ve aynı origin’den gelen frame’lere izin ver
                     .frameOptions(config -> config.sameOrigin())
             )
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/h2-console/**").permitAll()
-                    .requestMatchers("/products/**").authenticated()
+                    .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/products/**")).authenticated()
                     .anyRequest().permitAll()
             )
-              .httpBasic(Customizer.withDefaults());
-
+            .httpBasic(Customizer.withDefaults());
     return http.build();
   }
 
   @Bean
   public DaoAuthenticationProvider authProvider(MyUserDetailsService uds) {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    var provider = new DaoAuthenticationProvider();
     provider.setUserDetailsService(uds);
     provider.setPasswordEncoder(new BCryptPasswordEncoder());
     return provider;
